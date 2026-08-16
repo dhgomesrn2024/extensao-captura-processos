@@ -1,0 +1,31 @@
+AcaoPenal 0000005-06.2022.8.20.0001
+MINISTERIO PUBLICO X REU UM E OUTROS
+Detalhes
+Detalhes
+Polo Ativo
+Polo Passivo
+Classe judicial
+AÇÃO PENAL - PROCEDIMENTO ORDINÁRIO (283)
+Assunto
+Roubo (3419)
+Jurisdição
+Comarca de Ceará-Mirim
+Autuação
+10 mar 2022
+Valor da causa
+R$ 0,00
+Segredo de justiça?
+NÃO
+Órgão julgador
+1ª Vara da Comarca de Ceará-Mirim
+Polo ativo
+MINISTERIO PUBLICO DO ESTADO DO RIO GRANDE DO NORTE - CNPJ: 08.526.166/0001-00 (AUTOR)
+Polo passivo
+REU PRIMEIRO EXEMPLO - CPF: 111.111.111-11 (REU)
+ADVOGADO DE OUTREM - OAB RN0000325 - CPF: 222.222.222-22 (ADVOGADO)
+REU SEGUNDO EXEMPLO - CPF: 333.333.333-33 (REU)
+ADV EXEMPLO - OAB RN0099999 - CPF: 444.444.444-44 (ADVOGADO)
+REU TERCEIRO EXEMPLO - CPF: 555.555.555-55 (REU)
+Data da entrega
+Tipo de documento
+Expedientes

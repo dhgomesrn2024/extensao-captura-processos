@@ -1,0 +1,17 @@
+AlvJud 0000002-03.2017.8.20.0001
+REQUERENTE X Não definida
+Detalhes
+Detalhes
+Polo Ativo
+Polo Passivo
+Classe judicial
+ALVARÁ JUDICIAL - LEI 6858/80 (1298)
+Assunto
+Levantamento de Valores (9986)
+Órgão julgador
+Vara Única da Comarca de Angicos
+Polo ativo
+REQUERENTE EXEMPLO - CPF: 111.111.111-11 (REQUERENTE)
+ADV EXEMPLO - OAB RN0099999 - CPF: 222.222.222-22 (ADVOGADO)
+Polo passivo
+Expedientes

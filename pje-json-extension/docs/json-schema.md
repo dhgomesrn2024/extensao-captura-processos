@@ -1,0 +1,106 @@
+# Schema do JSON exportado
+
+## Envelope
+
+```json
+{
+  "gerado_em": "2026-08-16T17:00:00.000Z",
+  "total": 187,
+  "avisos": [
+    { "comarca": "Comarca de Parnamirim 23", "aviso": "colhidos 20 de 23 declarados (possível paginação não percorrida)" }
+  ],
+  "erros": [
+    { "numero_processo": "0800000-00.2024.8.20.5001", "erro": "HTTP 500" }
+  ],
+  "processos": []
+}
+```
+
+`avisos` e `erros` existem para que nenhuma perda fique silenciosa: confira ambos antes de dar a migração por concluída.
+
+O envelope traz ainda:
+
+- `coleta_completa` — `false` quando a fase 1 não percorreu todas as comarcas.
+- `comarcas_concluidas` — comarcas que fecharam colhido = declarado.
+- `revisar_manualmente` — processos em que algum polo não pôde ser interpretado. É a lista para conferir à mão; num acervo de 200, um polo mal lido passaria despercebido sem ela.
+- `sem_cliente_identificado` — processos onde a OAB configurada não apareceu. Pode ser correto (você não é o advogado constituído nos autos) ou sintoma de leitura incompleta; cruze com `revisar_manualmente`.
+
+## Diagnóstico por polo
+
+Cada processo traz `diagnostico`, que separa polo genuinamente vazio de falha de leitura — os dois davam lista vazia antes:
+
+```json
+"diagnostico": {
+  "polo_ativo":   { "status": "ok", "linhas_analisadas": 4 },
+  "polo_passivo": { "status": "sem_partes_cadastradas", "linhas_analisadas": 0 },
+  "revisar_manualmente": false
+}
+```
+
+| status | significado |
+|---|---|
+| `ok` | partes lidas normalmente |
+| `sem_partes_cadastradas` | a seção existe e está vazia no PJe — normal em alvará e divórcio consensual |
+| `nao_interpretado` | a seção tem conteúdo que não virou parte alguma: **conferir à mão** |
+| `secao_ausente` | o cabeçalho do polo não foi encontrado na página |
+
+## Processo
+
+```json
+{
+  "numero_processo": "0000005-06.2022.8.20.0001",
+  "comarca": "Comarca de Ceará-Mirim 8",
+  "classe": "AÇÃO PENAL - PROCEDIMENTO ORDINÁRIO",
+  "classe_codigo": "283",
+  "assunto": "Roubo",
+  "assunto_codigo": "3419",
+  "jurisdicao": "Comarca de Ceará-Mirim",
+  "orgao_julgador": "1ª Vara da Comarca de Ceará-Mirim",
+  "competencia": "Justiça Comum - Criminal",
+  "cargo_judicial": "Juiz de Direito",
+  "autuacao": "10 mar 2022",
+  "ultima_distribuicao": "10 mar 2022",
+  "valor_causa": "R$ 0,00",
+  "segredo_justica": "NÃO",
+  "justica_gratuita": "SIM",
+  "tutela_liminar": "NÃO",
+  "prioridade": "NÃO",
+  "polo_ativo": [],
+  "polo_passivo": [],
+  "clientes": [{ "nome": "REU SEGUNDO EXEMPLO", "papel": "REU", "polo": "passivo" }],
+  "qtd_clientes": 1,
+  "fonte": "PJe",
+  "tribunal": "TJRN",
+  "grau": "1",
+  "extraido_em": "2026-08-16T17:00:00.000Z"
+}
+```
+
+## Parte (dentro de `polo_ativo` / `polo_passivo`)
+
+```json
+{
+  "nome": "REU SEGUNDO EXEMPLO",
+  "papel": "REU",
+  "documento": { "tipo": "CPF", "valor": "000.000.000-00" },
+  "advogados": [
+    {
+      "nome": "ADV EXEMPLO",
+      "oab": { "uf": "RN", "numero": "99999", "sufixo": null, "original": "OAB RN0099999" },
+      "documento": { "tipo": "CPF", "valor": "000.000.000-00" }
+    }
+  ],
+  "is_cliente": true
+}
+```
+
+## Regras
+
+- `classe` / `assunto`: o código entre parênteses é separado em `classe_codigo` / `assunto_codigo`.
+- `papel`: vem como o PJe escreve — `AUTOR`, `REU`, `EXEQUENTE`, etc. (sem acento em `REU`).
+- `oab.numero`: sem zeros à esquerda (`OAB RN0099999` → `"99999"`). `original` guarda a forma como aparece no PJe.
+- `advogados`: ligados à parte imediatamente anterior na listagem do PJe, que é como o sistema agrupa.
+- `is_cliente`: `true` quando algum advogado daquela parte bate com a OAB configurada. Numa ação com vários réus, só os réus efetivamente representados são marcados — e podem ser mais de um: em `0000006-07.2022.8.20.0001`, dos 19 réus, dois têm a OAB configurada e ambos saem como clientes.
+- `clientes`: resumo das partes marcadas, com o polo em que estão. `qtd_clientes` repete o tamanho da lista para facilitar filtro.
+- Campo textual ausente vem como `null`.
+- Processo que falhou no download entra em `processos` apenas com `numero_processo`, `comarca` e `erro`, e também é listado em `erros`.

@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# configurações locais do Claude Code (específicas da máquina)
+.claude/settings.local.json
+
+# exportações reais da carteira: contêm nomes, CPF e processos em segredo
+# de justiça. Nunca devem ser versionadas.
+pje-acervo*.json
+pje-extension-log*.json
+*.acervo.json

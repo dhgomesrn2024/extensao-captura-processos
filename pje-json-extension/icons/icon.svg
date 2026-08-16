@@ -1,0 +1,20 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <rect x="4" y="4" width="120" height="120" rx="26" fill="#0f5c3f"/>
+  <rect x="4" y="4" width="120" height="120" rx="26" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="2"/>
+
+  <g transform="translate(24,20)">
+    <path d="M8 4 H46 L62 20 V88 A6 6 0 0 1 56 94 H8 A6 6 0 0 1 2 88 V10 A6 6 0 0 1 8 4 Z"
+          fill="#ffffff" stroke="#0b3a29" stroke-opacity="0.15" stroke-width="1.5"/>
+    <path d="M46 4 L62 20 H50 A4 4 0 0 1 46 16 Z" fill="#c9d6cf"/>
+
+    <rect x="14" y="34" width="34" height="6" rx="3" fill="#0f5c3f"/>
+    <rect x="14" y="46" width="34" height="6" rx="3" fill="#0f5c3f" opacity="0.55"/>
+    <rect x="14" y="58" width="22" height="6" rx="3" fill="#0f5c3f" opacity="0.55"/>
+  </g>
+
+  <g transform="translate(74,70)" fill="#ffffff">
+    <circle cx="24" cy="24" r="26" fill="#0b3a29"/>
+    <circle cx="24" cy="24" r="26" fill="none" stroke="#ffffff" stroke-opacity="0.15" stroke-width="1.5"/>
+    <path d="M14 25 L21 32 L35 16" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

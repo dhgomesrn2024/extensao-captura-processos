@@ -1,0 +1,49 @@
+ProceComCiv 0000004-05.2020.8.20.0001
+FULANO DE TAL COSTA X BELTRANA DE ARAUJO SANTOS
+Detalhes
+Detalhes
+Polo Ativo
+Polo Passivo
+Matéria
+Coisas
+Classe judicial
+PROCEDIMENTO COMUM CÍVEL (7)
+Assunto
+Adjudicação Compulsória (10450)
+Jurisdição
+Comarca de Angicos
+Autuação
+23 jun 2020
+Última distribuição
+23 jun 2020
+Valor da causa
+R$ 12.000,00
+Segredo de justiça?
+NÃO
+Justiça gratuita?
+SIM
+Tutela/liminar?
+NÃO
+Prioridade?
+NÃO
+Órgão julgador
+Vara Única da Comarca de Angicos
+Cargo judicial
+Juiz de Direito
+Competência
+Justiça Comum - Cível Residual - Interior
+Polo ativo
+FULANO DE TAL COSTA - CPF: 000.000.000-00 (AUTOR)
+CORINA ADVOGADA EXEMPLO - OAB RN0016581A - CPF: 111.111.111-11 (ADVOGADO)
+ADV EXEMPLO - OAB RN0099999 - CPF: 222.222.222-22 (ADVOGADO)
+TERCEIRO CAUSIDICO - OAB RN01234 - CPF: 333.333.333-33 (ADVOGADO)
+Polo passivo
+BELTRANA DE ARAUJO SANTOS - CPF: 444.444.444-44 (REU)
+OUTRO ADVOGADO EXEMPLO - OAB RN0005678 - CPF: 555.555.555-55 (ADVOGADO)
+Data da entrega
+Tipo de documento
+Descrição
+Prazo
+Situação
+Expedientes
+Movimentações
