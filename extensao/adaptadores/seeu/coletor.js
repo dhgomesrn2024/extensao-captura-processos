@@ -101,51 +101,88 @@
     return m ? Number(m[1]) : null;
   }
 
-  /** Âncoras de página: textos numéricos, acionadas por JavaScript. */
-  function ancorasDePagina() {
+  // Nomes reais do formulário da listagem, conferidos na página.
+  const FORM = "processosAdvogadoForm";
+  const CAMPO_TAMANHO = "processosAdvogadoPageSize";
+  const CAMPO_PAGINA = "processosAdvogadoPageNumber";
+  const TAMANHO_MAXIMO = 500;
+
+  function formularioDaListagem() {
     const doc = documentoDaListagem();
-    if (!doc) return [];
-    return Array.from(doc.querySelectorAll("a")).filter((a) =>
-      /^\d{1,3}$/.test((a.textContent || "").trim())
-    );
+    if (!doc) return null;
+    return doc.forms[FORM] || doc.forms[0] || null;
+  }
+
+  /** "48 registro(s) encontrado(s), exibindo de 1 até 20" -> [1, 20] */
+  function faixaExibida() {
+    const doc = documentoDaListagem();
+    if (!doc || !doc.body) return null;
+    const m = (doc.body.textContent || "").match(/exibindo de (\d+) at[eé] (\d+)/i);
+    return m ? [Number(m[1]), Number(m[2])] : null;
   }
 
   /**
-   * Percorre as páginas seguintes. A paginação do SEEU é JavaScript que
-   * submete o formulário, então o caminho é clicar e esperar a listagem
-   * trocar — não dá para montar URL.
+   * Submete o formulário e espera a listagem trocar.
+   *
+   * É preciso submeter, e não clicar: a paginação do SEEU são âncoras com
+   * href `javascript:`, e content script roda em mundo isolado, de onde esse
+   * tipo de navegação não dispara. `form.submit()` funciona.
    */
-  async function colherTodasAsPaginas(acumular, log) {
-    acumular(linksDaListagem());
+  async function submeterEEsperar(ajustar) {
+    const form = formularioDaListagem();
+    if (!form) return false;
 
-    const visitadas = new Set(["1"]);
+    const antes = primeiroNumero();
+    ajustar(form);
+    form.submit();
 
-    for (let volta = 0; volta < 50; volta += 1) {
-      try {
-        const proxima = ancorasDePagina().find((a) => !visitadas.has((a.textContent || "").trim()));
-        if (!proxima) break;
+    const voltou = await ate(() => {
+      const doc = documentoDaListagem();
+      if (!doc) return null;
+      const agora = primeiroNumero();
+      if (!agora) return null;
+      return agora !== antes || (faixaExibida() || [])[1] !== undefined ? true : null;
+    }, 20000);
 
-        const rotulo = (proxima.textContent || "").trim();
-        visitadas.add(rotulo);
+    await esperar(700);
+    return !!voltou;
+  }
 
-        const antes = primeiroNumero();
-        proxima.click();
+  /**
+   * Traz tudo numa página só, ampliando o tamanho da página.
+   *
+   * Muito mais robusto que percorrer páginas: uma submissão, um estado, nada
+   * de âncora que muda de lugar a cada carga.
+   */
+  async function trazerTudoNumaPagina() {
+    const form = formularioDaListagem();
+    if (!form || !form.elements[CAMPO_TAMANHO]) return false;
 
-        const mudou = await ate(() => {
-          const agora = primeiroNumero();
-          return agora && agora !== antes ? agora : null;
-        }, 15000);
+    return submeterEEsperar((f) => {
+      f.elements[CAMPO_TAMANHO].value = String(TAMANHO_MAXIMO);
+      if (f.elements[CAMPO_PAGINA]) f.elements[CAMPO_PAGINA].value = "1";
+    });
+  }
 
-        if (!mudou) break;
+  /** Reserva: percorre por número de página, também via submissão. */
+  async function percorrerPaginas(acumular, esperado, log) {
+    for (let pagina = 2; pagina <= 50; pagina += 1) {
+      const faixa = faixaExibida();
+      if (faixa && esperado && faixa[1] >= esperado) break;
 
-        await esperar(700);
-        acumular(linksDaListagem());
-      } catch (erro) {
-        await log("seeu", "paginação interrompida", {
-          erro: erro instanceof Error ? erro.message : String(erro)
-        });
+      const form = formularioDaListagem();
+      if (!form || !form.elements[CAMPO_PAGINA]) break;
+
+      const ok = await submeterEEsperar((f) => {
+        f.elements[CAMPO_PAGINA].value = String(pagina);
+      });
+
+      if (!ok) {
+        await log("seeu", "paginação parou", { pagina });
         break;
       }
+
+      acumular(linksDaListagem());
     }
   }
 
@@ -178,7 +215,7 @@
 
     toast("Colhendo a lista de processos do SEEU...");
 
-    await colherTodasAsPaginas((itens) => {
+    const registrar = (itens) => {
       let novos = 0;
       for (const item of itens) {
         if (!colhidos.has(item.numero_processo)) {
@@ -187,7 +224,17 @@
         }
       }
       return novos;
-    }, log);
+    };
+
+    // Primeiro tenta trazer tudo de uma vez; só pagina se ainda faltar.
+    const ampliou = await trazerTudoNumaPagina();
+    await log("seeu", "ampliação da página", { ampliou, esperado });
+
+    registrar(linksDaListagem());
+
+    if (esperado !== null && colhidos.size < esperado) {
+      await percorrerPaginas(registrar, esperado, log);
+    }
 
     if (esperado !== null && colhidos.size < esperado) {
       avisos.push({
@@ -201,7 +248,7 @@
       links: [...colhidos.values()],
       comarcas_concluidas: ["SEEU"],
       avisos,
-      fase1_completa: true
+      fase1_completa: esperado === null || colhidos.size >= esperado
     });
 
     await log("seeu", "fase 1 concluída", { colhidos: colhidos.size, esperado });

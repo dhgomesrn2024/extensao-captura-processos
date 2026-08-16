@@ -23,8 +23,10 @@
   /**
    * 1 - primeira versão: capa, partes a partir da listagem, benefícios e
    *     movimentações.
+   * 2 - advogados estruturados (nome + OAB com UF), depois de conferir o
+   *     formato real no acervo: "NOME - RN99999", vários separados por " / ".
    */
-  const VERSAO_PARSER = 1;
+  const VERSAO_PARSER = 2;
 
   const util = () =>
     typeof PjeExtUtil !== "undefined" ? PjeExtUtil : require("../../nucleo/util.js");
@@ -55,13 +57,31 @@
   };
 
   /**
-   * OAB dentro de "Advogados/Defensoria".
+   * Advogados de "Advogados/Defensoria".
    *
-   * O separador não pôde ser observado com segurança na página, então a busca
-   * é por grupos de dígitos: funciona com "NOME 12345", "NOME - 12345/RN" ou
-   * "NOME (12345)". Comparação numérica, ignorando zeros à esquerda — mesma
-   * normalização usada no PJe.
+   * Formato conferido no acervo real: `NOME COMPLETO - RN99999`, e vários
+   * separados por " / ". A OAB vem colada à UF, como no PJe.
+   *
+   * A extração da OAB é feita por grupos de dígitos, e não pelo separador:
+   * assim continua funcionando se o formato variar entre tribunais.
    */
+  function listarAdvogados(texto) {
+    return String(texto || "")
+      .split(" / ")
+      .map((pedaco) => normalizar(pedaco))
+      .filter(Boolean)
+      .map((pedaco) => {
+        const m = pedaco.match(/\b([A-Z]{2})\s*(\d{2,6})\s*([A-Z]?)\b/);
+        const nome = normalizar(pedaco.replace(/\s*[-–]\s*[A-Z]{2}\s*\d{2,6}\s*[A-Z]?\s*$/, "")) || null;
+        return {
+          nome: nome || pedaco,
+          oab: m
+            ? { uf: m[1].toUpperCase(), numero: normalizarOab(m[2]), sufixo: m[3] || null, original: m[0] }
+            : null
+        };
+      });
+  }
+
   function numerosDeOab(texto) {
     return [...String(texto || "").matchAll(/\d{2,6}/g)]
       .map((m) => m[0].replace(/^0+/, ""))
@@ -159,9 +179,7 @@
     const sentenciado = valor(capa, "Sentenciado") || ctx.executado || null;
     const souAdvogado = ehMeuAdvogado(advogados, config);
 
-    const listaAdvogados = advogados
-      ? [{ nome: nomeLimpo(advogados), oab: null, texto_original: advogados }]
-      : [];
+    const listaAdvogados = listarAdvogados(advogados);
 
     const parteAtiva = ctx.autoridade
       ? [{ nome: normalizar(ctx.autoridade), papel: "AUTORIDADE", papel_incomum: false, documento: null, advogados: [], is_cliente: false }]
@@ -257,6 +275,7 @@
     VERSAO_PARSER,
     lerCapa,
     lerMovimentos,
+    listarAdvogados,
     numerosDeOab,
     ehMeuAdvogado,
     nomeLimpo,

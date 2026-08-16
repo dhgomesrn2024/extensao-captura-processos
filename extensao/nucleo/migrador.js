@@ -80,6 +80,15 @@
       await pjeExtLog("migrador", "início", { url: location.href, adaptador: adaptador.id });
 
       const config = await lerConfig();
+
+      // Sem OAB, nenhum cliente é identificado — e a migração terminaria com
+      // centenas de registros silenciosamente vazios no campo que mais importa.
+      // Já aconteceu: uma reinstalação apagou a configuração e a corrida
+      // produziu 20 processos com zero clientes, sem um único aviso.
+      if (!config || !String(config.oabNumero || "").trim()) {
+        throw new Error("Informe a OAB no popup antes de migrar — sem ela nenhum cliente é identificado.");
+      }
+
       const contexto = { salvarEstado, lerEstado, toast, log: pjeExtLog };
 
       const { links, avisos, interrompida } = await adaptador.coletar(contexto);

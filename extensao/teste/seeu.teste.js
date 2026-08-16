@@ -48,7 +48,7 @@ const CAPA_PADRAO = [
   ["Juízo:", "VARA DE EXECUÇÃO PENAL DA COMARCA DE NATAL"],
   ["Sentenciado:", "FULANO DE TAL EXEMPLO (CPF: 000.000.000-00)"],
   ["Nome da Mãe:", "MARIA EXEMPLO"],
-  ["Advogados/Defensoria:", "ADV EXEMPLO 99999"],
+  ["Advogados/Defensoria:", "ADV EXEMPLO - RN99999"],
   ["Status BNMP:", "Sem mandado ativo"],
   ["Classe Processual:", "Execução da Pena (Pena Privativa de Liberdade)"],
   ["Assunto Principal:", "Pena Privativa de Liberdade"],
@@ -97,6 +97,7 @@ conferir("polo passivo é o executado", r.polo_passivo.map((p) => p.papel), ["EX
 conferir("nome do executado sem o CPF", r.polo_passivo[0].nome, "FULANO DE TAL EXEMPLO");
 conferir("CPF extraído para o campo próprio", r.polo_passivo[0].documento, { tipo: "CPF", valor: "000.000.000-00" });
 conferir("executado é cliente", r.polo_passivo[0].is_cliente, true);
+conferir("advogado com OAB estruturada", r.polo_passivo[0].advogados[0].oab.numero, "99999");
 conferir("um cliente identificado", r.qtd_clientes, 1);
 conferir("cliente nomeado", r.clientes[0].nome, "FULANO DE TAL EXEMPLO");
 
@@ -119,8 +120,16 @@ conferir("primeira movimentação", r.movimentos[0], {
 });
 conferir("contagem no diagnóstico", r.diagnostico.qtd_movimentos, 2);
 
+console.log("\n— advogados estruturados —");
+const advs = seeu.listarAdvogados("FULANO DE TAL - RN00987 / ADV EXEMPLO - RN99999");
+conferir("dois advogados separados por barra", advs.length, 2);
+conferir("nome sem a OAB", advs[1].nome, "ADV EXEMPLO");
+conferir("OAB com UF e número sem zeros", advs[1].oab, { uf: "RN", numero: "99999", sufixo: null, original: "RN99999" });
+conferir("sufixo preservado", seeu.listarAdvogados("BELTRANO - SP123456A")[0].oab.sufixo, "A");
+conferir("texto sem OAB não inventa", seeu.listarAdvogados("DEFENSORIA PUBLICA")[0].oab, null);
+
 console.log("\n— OAB em formatos diferentes —");
-const formatos = ["ADV EXEMPLO 99999", "ADV EXEMPLO - 99999/RN", "ADV EXEMPLO (99999)", "99999 - ADV EXEMPLO"];
+const formatos = ["ADV EXEMPLO - RN99999", "ADV EXEMPLO 99999", "ADV EXEMPLO - 99999/RN", "ADV EXEMPLO (99999)"];
 formatos.forEach((formato) => {
   const d = documentoFalso({ capa: CAPA_PADRAO.map((l) => (l[0] === "Advogados/Defensoria:" ? [l[0], formato] : l)) });
   const rr = seeu.parsearDetalhe(d, CONFIG, URL, CONTEXTO);
