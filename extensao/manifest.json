@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Captura de processos (PJe e SEEU)",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Migra o acervo do PJe e do SEEU: percorre o painel do advogado, baixa cada processo, identifica os clientes por OAB e exporta tudo em um JSON. (PJe v5 · SEEU v2)",
   "permissions": ["activeTab", "scripting", "storage"],
   "icons": {

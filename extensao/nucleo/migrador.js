@@ -91,12 +91,18 @@
 
       const contexto = { salvarEstado, lerEstado, toast, log: pjeExtLog };
 
-      const { links, avisos, interrompida } = await adaptador.coletar(contexto);
+      const { links, avisos, interrompida, completa } = await adaptador.coletar(contexto);
+
+      // A completude é do adaptador: só ele sabe quantos processos deveriam
+      // existir. Antes o núcleo sobrescrevia com !interrompida, e o envelope
+      // dizia "coleta completa" enquanto o aviso dizia 26 de 48.
+      const coletaCompleta = completa !== false && !interrompida;
 
       await pjeExtLog("migrador", "fase 1 encerrada", {
         adaptador: adaptador.id,
         qtdLinks: links.length,
         avisos: avisos.length,
+        completa: coletaCompleta,
         interrompida: interrompida || null
       });
 
@@ -113,15 +119,15 @@
         concluido_em: new Date().toISOString(),
         avisos,
         erros,
-        fase1_completa: !interrompida
+        fase1_completa: coletaCompleta
       });
       await pjeExtLog("migrador", "fase 2 concluída", { erros: erros.length });
 
       toast(
-        interrompida
-          ? `Parcial: ${links.length} processos. ${interrompida}. Rode de novo para completar.`
-          : `Migração concluída: ${links.length} processos. Baixe o JSON no popup.`,
-        !!interrompida
+        coletaCompleta
+          ? `Migração concluída: ${links.length} processos. Baixe o JSON no popup.`
+          : `Parcial: ${links.length} processos. ${interrompida || "a coleta não fechou"}. Confira os avisos no JSON.`,
+        !coletaCompleta
       );
       chrome.runtime.sendMessage({
         type: "pje-migrador:fim",

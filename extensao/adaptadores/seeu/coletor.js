@@ -128,24 +128,30 @@
    * href `javascript:`, e content script roda em mundo isolado, de onde esse
    * tipo de navegação não dispara. `form.submit()` funciona.
    */
-  async function submeterEEsperar(ajustar) {
+  async function submeterEEsperar(ajustar, condicao) {
     const form = formularioDaListagem();
     if (!form) return false;
 
-    const antes = primeiroNumero();
     ajustar(form);
     form.submit();
 
-    const voltou = await ate(() => {
-      const doc = documentoDaListagem();
-      if (!doc) return null;
-      const agora = primeiroNumero();
-      if (!agora) return null;
-      return agora !== antes || (faixaExibida() || [])[1] !== undefined ? true : null;
-    }, 20000);
+    // Duas condições, e a primeira é a que faltava: a listagem só está pronta
+    // quando o número de linhas alcança a faixa que a própria página declara
+    // ("exibindo de 1 até 48"). Sem isso, lê-se o DOM no meio da navegação e
+    // volta-se com menos processos do que existem — silenciosamente.
+    const pronta = await ate(() => {
+      if (!documentoDaListagem()) return null;
 
-    await esperar(700);
-    return !!voltou;
+      const faixa = faixaExibida();
+      if (!faixa) return null;
+
+      const previstos = faixa[1] - faixa[0] + 1;
+      if (linksDaListagem().length < previstos) return null;
+
+      return condicao(faixa) ? faixa : null;
+    }, 30000);
+
+    return !!pronta;
   }
 
   /**
@@ -154,28 +160,42 @@
    * Muito mais robusto que percorrer páginas: uma submissão, um estado, nada
    * de âncora que muda de lugar a cada carga.
    */
-  async function trazerTudoNumaPagina() {
+  async function trazerTudoNumaPagina(esperado) {
     const form = formularioDaListagem();
     if (!form || !form.elements[CAMPO_TAMANHO]) return false;
 
-    return submeterEEsperar((f) => {
-      f.elements[CAMPO_TAMANHO].value = String(TAMANHO_MAXIMO);
-      if (f.elements[CAMPO_PAGINA]) f.elements[CAMPO_PAGINA].value = "1";
-    });
+    const alvoFim = Math.min(esperado || TAMANHO_MAXIMO, TAMANHO_MAXIMO);
+
+    return submeterEEsperar(
+      (f) => {
+        f.elements[CAMPO_TAMANHO].value = String(TAMANHO_MAXIMO);
+        if (f.elements[CAMPO_PAGINA]) f.elements[CAMPO_PAGINA].value = "1";
+      },
+      (faixa) => faixa[1] >= alvoFim
+    );
   }
 
-  /** Reserva: percorre por número de página, também via submissão. */
-  async function percorrerPaginas(acumular, esperado, log) {
+  /**
+   * Reserva: percorre por número de página, também por submissão.
+   *
+   * O critério de parada é o início da faixa avançar — e não o fim alcançar o
+   * total, que já é verdadeiro logo após a ampliação e faria desistir na
+   * primeira volta.
+   */
+  async function percorrerPaginas(acumular, colhidos, esperado, log) {
     for (let pagina = 2; pagina <= 50; pagina += 1) {
-      const faixa = faixaExibida();
-      if (faixa && esperado && faixa[1] >= esperado) break;
+      if (esperado && colhidos() >= esperado) break;
 
+      const anterior = faixaExibida();
       const form = formularioDaListagem();
       if (!form || !form.elements[CAMPO_PAGINA]) break;
 
-      const ok = await submeterEEsperar((f) => {
-        f.elements[CAMPO_PAGINA].value = String(pagina);
-      });
+      const ok = await submeterEEsperar(
+        (f) => {
+          f.elements[CAMPO_PAGINA].value = String(pagina);
+        },
+        (faixa) => !anterior || faixa[0] !== anterior[0]
+      );
 
       if (!ok) {
         await log("seeu", "paginação parou", { pagina });
@@ -227,13 +247,13 @@
     };
 
     // Primeiro tenta trazer tudo de uma vez; só pagina se ainda faltar.
-    const ampliou = await trazerTudoNumaPagina();
-    await log("seeu", "ampliação da página", { ampliou, esperado });
-
+    const ampliou = await trazerTudoNumaPagina(esperado);
     registrar(linksDaListagem());
+    await log("seeu", "ampliação da página", { ampliou, esperado, colhidos: colhidos.size });
 
     if (esperado !== null && colhidos.size < esperado) {
-      await percorrerPaginas(registrar, esperado, log);
+      await percorrerPaginas(registrar, () => colhidos.size, esperado, log);
+      await log("seeu", "após paginação de reserva", { colhidos: colhidos.size, esperado });
     }
 
     if (esperado !== null && colhidos.size < esperado) {
@@ -251,9 +271,11 @@
       fase1_completa: esperado === null || colhidos.size >= esperado
     });
 
+    const completa = esperado === null || colhidos.size >= esperado;
+
     await log("seeu", "fase 1 concluída", { colhidos: colhidos.size, esperado });
 
-    return { links: [...colhidos.values()], avisos, interrompida: null };
+    return { links: [...colhidos.values()], avisos, interrompida: null, completa };
   }
 
   PjeExtAdaptadores.registrar({
