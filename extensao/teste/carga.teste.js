@@ -21,7 +21,9 @@ const ORDEM = [
   "nucleo/estado.js",
   "nucleo/adaptadores.js",
   "adaptadores/pje/parser.js",
-  "adaptadores/pje/coletor.js"
+  "adaptadores/pje/coletor.js",
+  "adaptadores/seeu/parser.js",
+  "adaptadores/seeu/coletor.js"
 ];
 
 const URL_PJE = "https://pje1g.tjrn.jus.br/pje/Painel/painel_usuario/advogado.seam";
@@ -93,13 +95,23 @@ for (const arquivo of ORDEM) {
 
 console.log("\n— registro do adaptador —");
 const pje = ctx.PjeExtAdaptadores && ctx.PjeExtAdaptadores.paraUrl(URL_PJE);
-conferir("um adaptador registrado", (ctx.PjeExtAdaptadores.listar() || []).length, 1);
+conferir("dois adaptadores registrados", (ctx.PjeExtAdaptadores.listar() || []).length, 2);
 conferir("detecta o painel do PJe", pje && pje.id, "PJe");
 conferir("não reivindica página alheia", !!ctx.PjeExtAdaptadores.paraUrl("https://example.com"), false);
 conferir("expõe a versão do parser", pje && pje.parserVersao, ctx.PjeParser.VERSAO_PARSER);
 conferir(
   "cumpre o contrato",
   pje && ["coletar", "buscarDetalhe", "parsear"].every((k) => typeof pje[k] === "function"),
+  true
+);
+
+const seeu = ctx.PjeExtAdaptadores.paraUrl("https://seeu.pje.jus.br/seeu/processosAdvogado.do");
+conferir("detecta o SEEU", seeu && seeu.id, "SEEU");
+conferir("SEEU não reivindica o PJe", ctx.PjeExtAdaptadores.paraUrl(URL_PJE).id, "PJe");
+conferir("PJe não reivindica o SEEU", seeu && seeu.id !== "PJe", true);
+conferir(
+  "SEEU cumpre o contrato",
+  seeu && ["coletar", "buscarDetalhe", "parsear"].every((k) => typeof seeu[k] === "function"),
   true
 );
 

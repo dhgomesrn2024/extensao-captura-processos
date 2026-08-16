@@ -104,3 +104,73 @@ Cada processo traz `diagnostico`, que separa polo genuinamente vazio de falha de
 - `clientes`: resumo das partes marcadas, com o polo em que estão. `qtd_clientes` repete o tamanho da lista para facilitar filtro.
 - Campo textual ausente vem como `null`.
 - Processo que falhou no download entra em `processos` apenas com `numero_processo`, `comarca` e `erro`, e também é listado em `erros`.
+
+---
+
+# Registros do SEEU
+
+O SEEU preenche **o mesmo envelope** do PJe: `numero_processo`, `fonte`,
+`polo_ativo`, `polo_passivo`, `clientes`, `diagnostico`, `parser_versao`.
+Quem consome o padrão do PJe não precisa mudar nada.
+
+Correspondência de polos, a partir da listagem:
+
+| SEEU | Campo |
+|---|---|
+| Autoridade | `polo_ativo`, papel `AUTORIDADE` |
+| Executado / Sentenciado | `polo_passivo`, papel `EXECUTADO` |
+
+O cliente é identificado pela OAB dentro de `Advogados/Defensoria`. Como o
+separador varia, a busca é por grupos de dígitos comparados numericamente —
+reconhece `NOME 99999`, `NOME - 99999/RN`, `NOME (99999)` e `99999 - NOME`.
+
+## Bloco aditivo `execucao_penal`
+
+Só existe em registros do SEEU. Campo novo, nunca alteração de campo
+existente — por isso não quebra consumidor algum.
+
+```json
+"execucao_penal": {
+  "sentenciado": "FULANO DE TAL",
+  "nome_da_mae": "MARIA EXEMPLO",
+  "advogados_defensoria": "ADV EXEMPLO 99999",
+  "status_bnmp": "Sem mandado ativo",
+  "local_prisao": "PENITENCIÁRIA EXEMPLO",
+  "sumario_pena": "12 anos e 6 meses",
+  "situacao_atual": "EM EXECUÇÃO",
+  "pena_inicio": "01/02/2020",
+  "pena_termino": "01/08/2032",
+  "beneficios": {
+    "progressao_regime": "15/03/2027",
+    "saida_temporaria": "20/12/2026",
+    "livramento_condicional": "10/06/2028"
+  }
+}
+```
+
+Os três benefícios são os marcos que definem quando o cliente progride, sai
+ou é solto. Não há equivalente no PJe.
+
+## `movimentos`
+
+O SEEU traz as movimentações na própria página, então o registro as inclui:
+
+```json
+"movimentos": [
+  { "sequencial": "102", "data": "14/08/2026", "evento": "Juntada de Petição", "movimentado_por": "Advogado" }
+]
+```
+
+Campo opcional do envelope: o PJe hoje devolve lista vazia, e pode passar a
+preencher sem quebrar nada.
+
+## Diferenças a conhecer
+
+- `tribunal` fica `null` para o SEEU: o domínio é nacional e não revela a
+  sigla. Em troca vem `tribunal_codigo` extraído do próprio número CNJ
+  (`8.20`). Traduzir para sigla exigiria a tabela do CNJ, que não foi
+  conferida — inventar seria pior que omitir.
+- `classe_codigo`, `assunto_codigo`, `valor_causa` e `competencia` não
+  existem na capa do SEEU e vêm `null`.
+- A listagem é lida com o filtro **Situação: Ativo**, que é o recorte
+  combinado. Processos arquivados não entram.

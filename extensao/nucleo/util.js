@@ -81,7 +81,22 @@
     return new DOMParser().parseFromString(html, "text/html");
   }
 
-  root.PjeExtUtil = { esperar, ate, toast, normalizar, origemPelaUrl, buscarDocumento, REGEX_CNJ };
+  /**
+   * Código do tribunal embutido no número CNJ (o par J.TR).
+   *
+   * Serve para sistemas nacionais como o SEEU, onde o domínio não revela o
+   * tribunal. Devolve só o código: traduzir para sigla exigiria a tabela do
+   * CNJ, que não foi conferida aqui — e inventar sigla seria pior que omitir.
+   */
+  function codigoTribunalDoNumero(numero) {
+    const m = String(numero || "").match(/\.(\d)\.(\d{2})\./);
+    return m ? `${m[1]}.${m[2]}` : null;
+  }
+
+  root.PjeExtUtil = {
+    esperar, ate, toast, normalizar, origemPelaUrl, buscarDocumento,
+    codigoTribunalDoNumero, REGEX_CNJ
+  };
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = root.PjeExtUtil;

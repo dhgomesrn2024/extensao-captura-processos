@@ -1,6 +1,6 @@
 # Extensão de captura de processos
 
-Extensão Chrome para **migrar o acervo processual do advogado** para outro sistema de gestão. Hoje lê o PJe; a estrutura de adaptadores existe para receber SEEU e outros. Percorre o painel do advogado, baixa cada processo, identifica quais partes são clientes seus e exporta tudo num único JSON.
+Extensão Chrome para **migrar o acervo processual do advogado** para outro sistema de gestão. Lê o PJe e o SEEU pelo mesmo contrato de saída. Percorre o painel do advogado, baixa cada processo, identifica quais partes são clientes seus e exporta tudo num único JSON.
 
 É ferramenta de migração pontual, não de acompanhamento contínuo.
 
@@ -49,10 +49,14 @@ extensao/
     pje/
       parser.js        interpreta a página de detalhe
       coletor.js       percorre a árvore do acervo e registra o adaptador
+    seeu/
+      parser.js        capa da execução penal, benefícios e movimentações
+      coletor.js       atravessa os frames e pagina a listagem
   popup.html / popup.js
   teste/
-    parser.teste.js    45 casos do parser
-    carga.teste.js     ordem de injeção e contrato do adaptador
+    parser.teste.js    45 casos do parser do PJe
+    seeu.teste.js      30 casos do parser do SEEU
+    carga.teste.js     ordem de injeção e contrato dos adaptadores
   samples/ docs/ icons/
 ```
 
@@ -64,6 +68,7 @@ O núcleo não muda.
 
 ```bash
 node teste/parser.teste.js
+node teste/seeu.teste.js
 node teste/carga.teste.js
 ```
 

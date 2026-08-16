@@ -40,7 +40,7 @@
 
       try {
         const doc = await adaptador.buscarDetalhe(link);
-        const dados = adaptador.parsear(doc, config, link.url_detalhe);
+        const dados = adaptador.parsear(doc, config, link.url_detalhe, link);
         mapa[chaveDoProcesso(adaptador.id, dados.grau || link.grau, link.numero_processo)] = Object.assign(
           { comarca: link.comarca || null },
           dados

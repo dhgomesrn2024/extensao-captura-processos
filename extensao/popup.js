@@ -110,6 +110,8 @@ async function migrar() {
         "nucleo/adaptadores.js",
         "adaptadores/pje/parser.js",
         "adaptadores/pje/coletor.js",
+        "adaptadores/seeu/parser.js",
+        "adaptadores/seeu/coletor.js",
         "nucleo/migrador.js"
       ]
     });
