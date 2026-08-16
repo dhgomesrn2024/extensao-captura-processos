@@ -1,6 +1,6 @@
-# pje-json-extension
+# Extensão de captura de processos
 
-Extensão Chrome para **migrar o acervo do PJe** para outro sistema de gestão de processos. Percorre o painel do advogado, baixa cada processo, identifica quais partes são clientes seus e exporta tudo num único JSON.
+Extensão Chrome para **migrar o acervo processual do advogado** para outro sistema de gestão. Hoje lê o PJe; a estrutura de adaptadores existe para receber SEEU e outros. Percorre o painel do advogado, baixa cada processo, identifica quais partes são clientes seus e exporta tudo num único JSON.
 
 É ferramenta de migração pontual, não de acompanhamento contínuo.
 
@@ -37,22 +37,34 @@ Deixe a aba do PJe aberta e em primeiro plano durante a fase 1: ela depende de c
 ## Estrutura
 
 ```text
-pje-json-extension/
+extensao/
   manifest.json
-  pje-core.js       parser (puro, testável em Node)
-  harvester.js      motor da migração: varre a árvore e busca os detalhes
-  popup.html/js     interface: OAB, progresso, exportação
-  logger.js         log persistente para diagnóstico
-  test-parser.js    testes do parser
-  icons/
-  samples/          amostras com a estrutura real (dados anonimizados)
-  docs/json-schema.md
+  nucleo/            não sabe de tribunal nenhum
+    util.js            esperas, toast, codificação, tribunal/grau pela URL
+    estado.js          armazenamento e chave fonte+grau+número
+    adaptadores.js     registro e seleção por URL
+    migrador.js        orquestra as duas fases
+    logger.js          log persistente para diagnóstico
+  adaptadores/
+    pje/
+      parser.js        interpreta a página de detalhe
+      coletor.js       percorre a árvore do acervo e registra o adaptador
+  popup.html / popup.js
+  teste/
+    parser.teste.js    45 casos do parser
+    carga.teste.js     ordem de injeção e contrato do adaptador
+  samples/ docs/ icons/
 ```
+
+Para acrescentar um sistema novo (SEEU, Projudi, eSAJ), basta um diretório em
+`adaptadores/` que implemente o contrato descrito em `nucleo/adaptadores.js`.
+O núcleo não muda.
 
 ## Testes
 
 ```bash
-node test-parser.js
+node teste/parser.teste.js
+node teste/carga.teste.js
 ```
 
 Cobrem os dois casos que importam: processo cível com advogado no polo ativo, e ação penal com três réus onde só o segundo é cliente.

@@ -92,8 +92,10 @@ async function migrar() {
     return;
   }
 
-  if (!/painel_usuario/i.test(aba.url || "")) {
-    statusEl.textContent = "Abra o Painel do Advogado do PJe nesta aba primeiro.";
+  // Qual sistema é, quem decide é o adaptador — o popup só barra o que nem
+  // dá para injetar (páginas internas do Chrome).
+  if (!/^https?:/i.test(aba.url || "")) {
+    statusEl.textContent = "Abra o sistema do tribunal (PJe ou SEEU) nesta aba primeiro.";
     migrarButton.disabled = false;
     return;
   }
@@ -101,7 +103,15 @@ async function migrar() {
   try {
     await chrome.scripting.executeScript({
       target: { tabId: aba.id },
-      files: ["logger.js", "pje-core.js", "harvester.js"]
+      files: [
+        "nucleo/logger.js",
+        "nucleo/util.js",
+        "nucleo/estado.js",
+        "nucleo/adaptadores.js",
+        "adaptadores/pje/parser.js",
+        "adaptadores/pje/coletor.js",
+        "nucleo/migrador.js"
+      ]
     });
     statusEl.textContent = "Migração em andamento na aba do PJe. Pode fechar este popup.";
     await pjeExtLog("popup", "migrador injetado", { tabId: aba.id });
@@ -221,7 +231,7 @@ oabUfInput.addEventListener("change", salvarConfig);
 
 function mostrarVersao() {
   const ext = chrome.runtime.getManifest().version;
-  const parser = typeof PjeCore !== "undefined" ? PjeCore.VERSAO_PARSER : "?";
+  const parser = typeof PjeParser !== "undefined" ? PjeParser.VERSAO_PARSER : "?";
   document.getElementById("versao").textContent = `extensão ${ext} · parser v${parser}`;
 }
 

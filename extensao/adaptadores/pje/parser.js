@@ -343,16 +343,10 @@
     return [...new Set((texto || "").match(REGEX_CNJ_GLOBAL) || [])];
   }
 
-  function tribunalPelaUrl(href) {
-    try {
-      const host = new URL(href).hostname;
-      const m = host.match(/\b(tj[a-z]{2}|trt\d{1,2}|trf\d{1,2})\b/i);
-      const grau = /pje2g|\/2g\//i.test(href) ? "2" : /pje1g|\/1g\//i.test(href) ? "1" : null;
-      return { tribunal: m ? m[1].toUpperCase() : null, grau };
-    } catch (erro) {
-      return { tribunal: null, grau: null };
-    }
-  }
+  // Tribunal e grau vêm do núcleo: a mesma regra precisa valer para o link
+  // colhido e para o registro final, senão os dois divergem.
+  const tribunalPelaUrl = (href) =>
+    (typeof PjeExtUtil !== "undefined" ? PjeExtUtil : require("../../nucleo/util.js")).origemPelaUrl(href);
 
   /** Monta o registro de um processo a partir da página de detalhe. */
   function parsearDetalhe(doc, config, urlOrigem) {
@@ -434,7 +428,7 @@
     REGEX_CNJ
   };
 
-  root.PjeCore = api;
+  root.PjeParser = api;
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = api;

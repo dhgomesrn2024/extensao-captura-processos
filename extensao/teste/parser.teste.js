@@ -1,10 +1,11 @@
 /**
  * Testes do parser contra amostras com a estrutura real do PJe/TJRN.
- * Rodar: node test-parser.js
+ * Rodar: node teste/parser.teste.js
  */
 const fs = require("fs");
 const path = require("path");
-const core = require("./pje-core.js");
+require("../nucleo/util.js"); // define PjeExtUtil, usado pelo parser
+const core = require("../adaptadores/pje/parser.js");
 
 const CONFIG = { oabNumero: "99999", oabUf: "RN" };
 let falhas = 0;
@@ -16,7 +17,7 @@ function conferir(descricao, obtido, esperado) {
 }
 
 function carregar(nomeArquivo) {
-  const texto = fs.readFileSync(path.join(__dirname, "samples", nomeArquivo), "utf8");
+  const texto = fs.readFileSync(path.join(__dirname, "..", "samples", nomeArquivo), "utf8");
   const doc = { body: { textContent: texto } };
   const url = "https://pje1g.tjrn.jus.br/pje/Processo/ConsultaProcesso/Detalhe/listProcessoCompletoAdvogado.seam?id=1234567";
   return core.parsearDetalhe(doc, CONFIG, url);
