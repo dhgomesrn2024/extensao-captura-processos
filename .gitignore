@@ -9,3 +9,6 @@
 pje-acervo*.json
 pje-extension-log*.json
 *.acervo.json
+
+# pacotes gerados pelo empacotar.sh
+dist/

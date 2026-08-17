@@ -22,8 +22,55 @@ A aba CONSULTA PROCESSOS foi descartada como fonte: tem reCAPTCHA.
 
 ## Instalar
 
-1. `chrome://extensions` → ative **Modo de desenvolvedor**.
-2. **Carregar sem compactação** → selecione a pasta `pje-json-extension`.
+A extensão é **a mesma em Mac, Windows e Linux** — extensão do Chrome não tem
+código de sistema operacional. Não existem duas versões para manter.
+
+### Gerar o pacote
+
+```bash
+./empacotar.sh
+```
+
+Roda os testes e, só se passarem, gera `dist/captura-processos-VERSAO.zip`
+com o que roda — sem testes, amostras nem documentação de desenvolvimento.
+
+### Instalar em cada máquina
+
+1. Descompacte o ZIP numa pasta que vá **permanecer no lugar**. O Chrome
+   guarda o caminho, não uma cópia: mover ou apagar a pasta quebra a
+   extensão.
+2. Abra `chrome://extensions`.
+3. Ligue **Modo de desenvolvedor** (canto superior direito).
+4. **Carregar sem compactação** e selecione a pasta descompactada.
+
+Sugestão de lugar estável:
+
+| | Caminho |
+|---|---|
+| macOS | `~/Aplicativos/captura-processos` |
+| Windows | `C:\Users\SEU_USUARIO\AppData\Local\captura-processos` |
+
+Para levar o pacote de uma máquina à outra, o caminho mais simples é anexar
+o ZIP a um *release* do repositório privado e baixar do outro computador.
+
+### Depois de instalar
+
+Preencha OAB e UF no popup. Sem isso o migrador se recusa a rodar — de
+propósito: sem OAB nenhum cliente é identificado.
+
+Cada máquina tem seu próprio armazenamento. Configuração e carteira **não**
+sincronizam entre Mac e Windows; o que atravessa é o JSON exportado.
+
+### Sobre distribuição
+
+**Não tente gerar `.crx`.** O Chrome bloqueia a instalação de `.crx` vindo de
+fora da loja desde 2018, em todos os sistemas. É caminho morto.
+
+Para uso em várias máquinas com atualização automática e sem modo de
+desenvolvedor, o caminho real é publicar na **Chrome Web Store como não
+listada**: só quem tem o link instala, custa uma taxa única de US$ 5 de
+desenvolvedor e passa por revisão. Vale a pena se a extensão for entregue a
+mentorados; para uso próprio em duas máquinas, o ZIP resolve.
 
 ## Usar
 
