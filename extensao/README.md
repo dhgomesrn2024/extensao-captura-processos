@@ -45,6 +45,7 @@ extensao/
     adaptadores.js     registro e seleção por URL
     migrador.js        orquestra as duas fases
     logger.js          log persistente para diagnóstico
+    exportacao.js      garantias do JSON: sem token, movimentações opcionais
   adaptadores/
     pje/
       parser.js        interpreta a página de detalhe
@@ -57,6 +58,7 @@ extensao/
     parser.teste.js    45 casos do parser do PJe
     seeu.teste.js      30 casos do parser do SEEU
     carga.teste.js     ordem de injeção e contrato dos adaptadores
+    exportacao.teste.js  garantias do arquivo exportado
   samples/ docs/ icons/
 ```
 
@@ -70,6 +72,7 @@ O núcleo não muda.
 node teste/parser.teste.js
 node teste/seeu.teste.js
 node teste/carga.teste.js
+node teste/exportacao.teste.js
 ```
 
 Cobrem os dois casos que importam: processo cível com advogado no polo ativo, e ação penal com três réus onde só o segundo é cliente.

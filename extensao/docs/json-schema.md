@@ -174,3 +174,46 @@ preencher sem quebrar nada.
   existem na capa do SEEU e vêm `null`.
 - A listagem é lida com o filtro **Situação: Ativo**, que é o recorte
   combinado. Processos arquivados não entram.
+
+---
+
+# Movimentações: com ou sem
+
+O popup traz a opção **Incluir movimentações no JSON**, com a contagem do
+acervo ao lado para a escolha ser informada (um acervo de 48 processos do
+SEEU passou de 15 mil movimentações).
+
+A decisão é do **export**, não da captura. As movimentações são sempre
+colhidas e guardadas; o que muda é o que entra no arquivo. Assim o mesmo
+acervo gera os dois formatos sem migrar de novo, e o caminho de coleta não
+muda para sistema nenhum.
+
+O envelope registra a escolha, e o nome do arquivo também:
+
+```json
+{ "inclui_movimentos": false }
+```
+`pje-acervo-1g-sem-movimentos-2026-08-17.json`
+
+Quando omitidas, o registro guarda a prova de que existiam:
+
+```json
+{
+  "movimentos_omitidos": true,
+  "qtd_movimentos": 214
+}
+```
+
+Omitir calado faria um processo movimentado parecer parado — o mesmo
+princípio que vale para polo vazio e para processo ausente do DataJud.
+
+Registro do PJe não tem movimentações e passa intacto nas duas opções: não
+ganha `movimentos_omitidos` nem contagem.
+
+## Limpeza obrigatória no export
+
+Todo texto exportado passa por uma varredura que remove `_tj`, `jsessionid`
+e `ca` em qualquer nível do registro. São tokens de sessão, e um arquivo
+destinado a outro sistema não pode carregá-los.
+
+Vale para todos os adaptadores, inclusive os que vierem depois.

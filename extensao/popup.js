@@ -3,16 +3,23 @@ const oabUfInput = document.getElementById("oabUf");
 const statusEl = document.getElementById("status");
 const avisosEl = document.getElementById("avisos");
 const revisarEl = document.getElementById("revisar");
+const movimentosCheck = document.getElementById("incluirMovimentos");
+const movimentosInfoEl = document.getElementById("movimentosInfo");
 const contadorEl = document.getElementById("contador");
 const progressoEl = document.getElementById("progresso");
 const migrarButton = document.getElementById("migrar");
 
 async function carregarConfig() {
-  const { advogadoConfig } = await chrome.storage.local.get("advogadoConfig");
+  const { advogadoConfig, incluirMovimentos } = await chrome.storage.local.get([
+    "advogadoConfig",
+    "incluirMovimentos"
+  ]);
   if (advogadoConfig) {
     oabNumeroInput.value = advogadoConfig.oabNumero || "";
     oabUfInput.value = advogadoConfig.oabUf || "";
   }
+  // Padrão: incluir, que é o comportamento que já existia.
+  movimentosCheck.checked = incluirMovimentos !== false;
 }
 
 async function salvarConfig() {
@@ -137,24 +144,7 @@ async function baixar(nome, dados) {
   URL.revokeObjectURL(url);
 }
 
-/**
- * Remove token de sessão de qualquer texto do registro, em qualquer nível.
- *
- * Última barreira antes do arquivo sair da máquina. O parser já limpa as
- * células, mas o export é o ponto por onde tudo passa — e um token de sessão
- * viajando dentro do JSON para outro sistema é problema de segurança, não de
- * qualidade de dado. Já aconteceu: 192 ocorrências num único arquivo.
- */
-function semSegredos(valor) {
-  if (typeof valor === "string") {
-    return valor.replace(/[?&](_tj|jsessionid|ca)=[^"'\s&]*/gi, "");
-  }
-  if (Array.isArray(valor)) return valor.map(semSegredos);
-  if (valor && typeof valor === "object") {
-    return Object.fromEntries(Object.entries(valor).map(([k, v]) => [k, semSegredos(v)]));
-  }
-  return valor;
-}
+const { contarMovimentos, prepararProcessos } = PjeExtExportacao;
 
 async function baixarProcessos() {
   const mapa = await processosSalvos();
@@ -164,6 +154,8 @@ async function baixarProcessos() {
     statusEl.textContent = "Nada capturado ainda.";
     return;
   }
+
+  const incluirMovimentos = movimentosCheck.checked;
 
   const { migracao } = await chrome.storage.local.get("migracao");
 
@@ -193,9 +185,10 @@ async function baixarProcessos() {
   const graus = [...new Set(itens.map((p) => p.grau).filter(Boolean))].sort();
   const sufixoGrau = graus.length === 1 ? `-${graus[0]}g` : graus.length ? `-${graus.join("e")}g` : "";
 
-  await baixar(`pje-acervo${sufixoGrau}-${new Date().toISOString().slice(0, 10)}.json`, {
+  await baixar(`pje-acervo${sufixoGrau}${incluirMovimentos ? "" : "-sem-movimentos"}-${new Date().toISOString().slice(0, 10)}.json`, {
     gerado_em: new Date().toISOString(),
     total: itens.length,
+    inclui_movimentos: incluirMovimentos,
     graus,
     total_por_grau: graus.reduce((acc, g) => Object.assign(acc, { [g]: itens.filter((p) => p.grau === g).length }), {}),
     coleta_completa: !migracao || migracao.fase1_completa !== false,
@@ -205,7 +198,7 @@ async function baixarProcessos() {
     revisar_manualmente: revisar,
     apenas_rotulo_incomum: soRotulo,
     sem_cliente_identificado: semCliente,
-    processos: semSegredos(itens)
+    processos: prepararProcessos(itens, incluirMovimentos)
   });
 }
 
@@ -247,6 +240,9 @@ document.getElementById("baixar").addEventListener("click", baixarProcessos);
 document.getElementById("limpar").addEventListener("click", limparBase);
 document.getElementById("baixarLog").addEventListener("click", baixarLog);
 document.getElementById("limparLog").addEventListener("click", limparLog);
+movimentosCheck.addEventListener("change", () =>
+  chrome.storage.local.set({ incluirMovimentos: movimentosCheck.checked })
+);
 oabNumeroInput.addEventListener("change", salvarConfig);
 oabUfInput.addEventListener("change", salvarConfig);
 

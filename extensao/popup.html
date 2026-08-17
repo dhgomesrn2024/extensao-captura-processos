@@ -26,6 +26,14 @@
       .barra > div { height: 100%; width: 0; background: #027a48; transition: width .2s; }
       .secondary-buttons { display: flex; gap: 8px; }
       .secondary-buttons button { background: #f2f4f7; border: 1px solid #d0d5dd; border-radius: 6px; }
+      .opcao {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 8px 0 2px;
+        font-size: 12px;
+      }
+      .opcao input { width: auto; margin: 0; }
       .aviso { color: #b54708; font-size: 11px; }
       hr { border: none; border-top: 1px solid #eaecf0; margin: 12px 0; }
     </style>
@@ -57,6 +65,11 @@
     <section>
       <p><strong id="contador">0</strong> processo(s) na base local</p>
       <p id="revisar" class="aviso"></p>
+      <label class="opcao">
+        <input type="checkbox" id="incluirMovimentos" checked />
+        Incluir movimentações no JSON
+      </label>
+      <p id="movimentosInfo" class="hint"></p>
       <div class="secondary-buttons">
         <button id="baixar">Baixar JSON</button>
         <button id="limpar">Limpar base</button>
@@ -75,6 +88,7 @@
 
     <script src="nucleo/logger.js"></script>
     <script src="nucleo/util.js"></script>
+    <script src="nucleo/exportacao.js"></script>
     <script src="adaptadores/pje/parser.js"></script>
     <script src="popup.js"></script>
   </body>
