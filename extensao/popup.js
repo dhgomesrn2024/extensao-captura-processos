@@ -137,6 +137,25 @@ async function baixar(nome, dados) {
   URL.revokeObjectURL(url);
 }
 
+/**
+ * Remove token de sessão de qualquer texto do registro, em qualquer nível.
+ *
+ * Última barreira antes do arquivo sair da máquina. O parser já limpa as
+ * células, mas o export é o ponto por onde tudo passa — e um token de sessão
+ * viajando dentro do JSON para outro sistema é problema de segurança, não de
+ * qualidade de dado. Já aconteceu: 192 ocorrências num único arquivo.
+ */
+function semSegredos(valor) {
+  if (typeof valor === "string") {
+    return valor.replace(/[?&](_tj|jsessionid|ca)=[^"'\s&]*/gi, "");
+  }
+  if (Array.isArray(valor)) return valor.map(semSegredos);
+  if (valor && typeof valor === "object") {
+    return Object.fromEntries(Object.entries(valor).map(([k, v]) => [k, semSegredos(v)]));
+  }
+  return valor;
+}
+
 async function baixarProcessos() {
   const mapa = await processosSalvos();
   const itens = Object.values(mapa);
@@ -186,7 +205,7 @@ async function baixarProcessos() {
     revisar_manualmente: revisar,
     apenas_rotulo_incomum: soRotulo,
     sem_cliente_identificado: semCliente,
-    processos: itens
+    processos: semSegredos(itens)
   });
 }
 

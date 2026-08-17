@@ -25,14 +25,59 @@
    *     movimentações.
    * 2 - advogados estruturados (nome + OAB com UF), depois de conferir o
    *     formato real no acervo: "NOME - RN99999", vários separados por " / ".
+   * 3 - remove o script embutido nas células. Sem isso, classe, assunto e
+   *     sigilo vinham com 600 caracteres de JavaScript e com o token de
+   *     sessão `_tj` junto, que ia parar no JSON exportado.
    */
-  const VERSAO_PARSER = 2;
+  const VERSAO_PARSER = 3;
+
+  /**
+   * A página do SEEU exibe no máximo 500 movimentos. Ao bater exatamente
+   * nesse número, o histórico está cortado — e isso precisa ser dito, não
+   * suposto completo.
+   */
+  const LIMITE_MOVIMENTOS_NA_PAGINA = 500;
 
   const util = () =>
     typeof PjeExtUtil !== "undefined" ? PjeExtUtil : require("../../nucleo/util.js");
 
   const normalizar = (t) =>
     (t || "").replace(/ /g, " ").replace(/\s+/g, " ").trim();
+
+  /**
+   * Texto de uma célula, sem o script que o SEEU embute dentro dela.
+   *
+   * Várias células trazem um `AjaxJspTag.Callout` de ajuda, e `textContent`
+   * inclui o código. Sem remover, "Execução da Pena" virava 600 caracteres de
+   * JavaScript — e junto vinha o token de sessão `_tj`, que acabava dentro do
+   * JSON exportado.
+   */
+  function textoDaCelula(celula) {
+    if (!celula) return "";
+
+    if (typeof celula.cloneNode === "function" && typeof celula.querySelectorAll === "function") {
+      const copia = celula.cloneNode(true);
+      copia.querySelectorAll("script, style").forEach((n) => n.remove());
+      return limparRuido(copia.textContent);
+    }
+
+    return limparRuido(celula.textContent);
+  }
+
+  /**
+   * Segunda barreira, no texto.
+   *
+   * Vale mesmo quando o script não veio como elemento: corta no início do
+   * código e remove qualquer token de sessão que tenha sobrado. Token de
+   * sessão não pode sair daqui em hipótese alguma.
+   */
+  function limparRuido(texto) {
+    return normalizar(
+      String(texto || "")
+        .split(/\bnew\s+AjaxJspTag\b|\boverlib\b|\bfunction\s*\(/)[0]
+        .replace(/[?&]_tj=[^"'\s&]*/gi, "")
+    );
+  }
 
   /** Lê a tabela de capa como pares rótulo → valor. */
   function lerCapa(doc) {
@@ -44,9 +89,9 @@
       const celulas = Array.from(linha.cells || []);
       if (celulas.length < 2) continue;
 
-      const rotulo = normalizar(celulas[0].textContent).replace(/:$/, "").toLowerCase();
+      const rotulo = textoDaCelula(celulas[0]).replace(/:$/, "").toLowerCase();
       if (!rotulo) continue;
-      if (!pares.has(rotulo)) pares.set(rotulo, normalizar(celulas[1].textContent));
+      if (!pares.has(rotulo)) pares.set(rotulo, textoDaCelula(celulas[1]));
     }
     return pares;
   }
@@ -129,9 +174,7 @@
       const linhas = Array.from(tabela.rows || []);
       if (linhas.length < 2) continue;
 
-      const cabecalho = Array.from(linhas[0].cells || []).map((c) =>
-        normalizar(c.textContent).toLowerCase()
-      );
+      const cabecalho = Array.from(linhas[0].cells || []).map((c) => textoDaCelula(c).toLowerCase());
       const iData = cabecalho.findIndex((c) => c.startsWith("data"));
       const iEvento = cabecalho.findIndex((c) => c.startsWith("evento"));
       if (iData < 0 || iEvento < 0) continue;
@@ -144,15 +187,15 @@
         const celulas = Array.from(linha.cells || []);
         if (celulas.length <= iEvento) continue;
 
-        const data = normalizar(celulas[iData] && celulas[iData].textContent);
-        const evento = normalizar(celulas[iEvento] && celulas[iEvento].textContent);
+        const data = textoDaCelula(celulas[iData]);
+        const evento = textoDaCelula(celulas[iEvento]);
         if (!data && !evento) continue;
 
         movimentos.push({
-          sequencial: iSeq >= 0 && celulas[iSeq] ? normalizar(celulas[iSeq].textContent) || null : null,
+          sequencial: iSeq >= 0 ? textoDaCelula(celulas[iSeq]) || null : null,
           data: data || null,
           evento: evento || null,
-          movimentado_por: iPor >= 0 && celulas[iPor] ? normalizar(celulas[iPor].textContent) || null : null
+          movimentado_por: iPor >= 0 ? textoDaCelula(celulas[iPor]) || null : null
         });
       }
 
@@ -259,6 +302,7 @@
         papeis_incomuns: [],
         capa_encontrada: !!capa,
         qtd_movimentos: movimentos.length,
+        movimentos_truncados: movimentos.length >= LIMITE_MOVIMENTOS_NA_PAGINA,
         revisar_manualmente: !capa || statusPassivo !== "ok"
       },
 
@@ -276,6 +320,8 @@
     lerCapa,
     lerMovimentos,
     listarAdvogados,
+    limparRuido,
+    LIMITE_MOVIMENTOS_NA_PAGINA,
     numerosDeOab,
     ehMeuAdvogado,
     nomeLimpo,

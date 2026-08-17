@@ -146,6 +146,27 @@ const zeros = documentoFalso({
 });
 conferir("ignora zeros à esquerda", seeu.parsearDetalhe(zeros, CONFIG, URL, CONTEXTO).qtd_clientes, 1);
 
+console.log("\n— script embutido na célula não vaza —");
+const SUJO = "386 - Execução da Pena new AjaxJspTag.Callout( \"/seeu/ajaxUtils.do?_tj=c31c048f2b62f2b2\", { overlib: \"STICKY\" });";
+conferir("corta no início do script", seeu.limparRuido(SUJO), "386 - Execução da Pena");
+conferir("nenhum token de sessão sobrevive", /_tj/.test(seeu.limparRuido(SUJO)), false);
+
+const comScript = documentoFalso({
+  capa: CAPA_PADRAO.map((l) => (l[0] === "Classe Processual:" ? [l[0], SUJO] : l))
+});
+const rScript = seeu.parsearDetalhe(comScript, CONFIG, URL, CONTEXTO);
+conferir("classe limpa no registro", rScript.classe, "386 - Execução da Pena");
+conferir("registro inteiro sem token", /_tj/.test(JSON.stringify(rScript)), false);
+
+console.log("\n— histórico cortado é declarado —");
+const muitos = Array.from({ length: seeu.LIMITE_MOVIMENTOS_NA_PAGINA }, (_, i) => [
+  String(i + 1), "01/01/2026", "Evento " + i, "", "Servidor"
+]);
+const rCorte = seeu.parsearDetalhe(documentoFalso({ capa: CAPA_PADRAO, movimentos: muitos }), CONFIG, URL, CONTEXTO);
+conferir("atingiu o limite da página", rCorte.movimentos.length, seeu.LIMITE_MOVIMENTOS_NA_PAGINA);
+conferir("e avisa que está cortado", rCorte.diagnostico.movimentos_truncados, true);
+conferir("histórico curto não é marcado", r.diagnostico.movimentos_truncados, false);
+
 console.log("\n— ausência declarada, nunca silenciosa —");
 const semCapa = seeu.parsearDetalhe(documentoFalso({ semCapa: true }), CONFIG, URL, CONTEXTO);
 conferir("sem capa cai para o contexto da listagem", semCapa.polo_passivo[0].nome, "FULANO DE TAL EXEMPLO");
