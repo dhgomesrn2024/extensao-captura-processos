@@ -20,6 +20,16 @@ Não é necessário. O `fetch` dentro da sessão já autenticada devolve a pági
 
 A aba CONSULTA PROCESSOS foi descartada como fonte: tem reCAPTCHA.
 
+## Uso responsável
+
+Automatiza o que o próprio advogado já faz à mão, na sessão dele: a extensão
+não contorna autenticação nem acessa nada além do que a conta logada já
+enxerga. Serve para migrar a carteira do próprio usuário.
+
+Os dados extraídos trazem nomes de partes, CPF e processos em segredo de
+justiça. O arquivo exportado é sigiloso — não versione, não compartilhe sem
+necessidade, e apague quando a migração terminar.
+
 ## Instalar
 
 A extensão é **a mesma em Mac, Windows e Linux** — extensão do Chrome não tem
@@ -34,7 +44,17 @@ código de sistema operacional. Não existem duas versões para manter.
 Roda os testes e, só se passarem, gera `dist/captura-processos-VERSAO.zip`
 com o que roda — sem testes, amostras nem documentação de desenvolvimento.
 
-### Instalar em cada máquina
+### Uso responsável
+
+Automatiza o que o próprio advogado já faz à mão, na sessão dele: a extensão
+não contorna autenticação nem acessa nada além do que a conta logada já
+enxerga. Serve para migrar a carteira do próprio usuário.
+
+Os dados extraídos trazem nomes de partes, CPF e processos em segredo de
+justiça. O arquivo exportado é sigiloso — não versione, não compartilhe sem
+necessidade, e apague quando a migração terminar.
+
+## Instalar em cada máquina
 
 1. Descompacte o ZIP numa pasta que vá **permanecer no lugar**. O Chrome
    guarda o caminho, não uma cópia: mover ou apagar a pasta quebra a

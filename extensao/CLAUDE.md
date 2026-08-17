@@ -60,6 +60,7 @@ Um diretório em `adaptadores/` implementando o contrato de `nucleo/adaptadores.
 
 **Olhe a página antes de escrever o parser.** A lição mais cara do projeto: o primeiro parser do PJe foi escrito para uma estrutura que não existia, e só a inspeção real corrigiu.
 
-## Projeto irmão
+## Contrato de dados
 
-`~/Documents/APLICATIVOS E IDEIAS/copiloto-processual` — concepção do produto que consome este JSON. Mudança no schema é quebra de contrato entre os dois.
+O JSON exportado é consumido por outro sistema. Mudança no schema descrito em
+`docs/json-schema.md` é quebra de contrato — trate como tal.
